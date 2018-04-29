@@ -1,0 +1,4 @@
+#Sat Apr 28 23:00:27 COT 2018
+base.0=E\:\\Documents\\Campo 4\\ble_test\\android\\app\\build\\intermediates\\transforms\\dex\\release\\0
+path.0=classes.dex
+renamed.0=classes.dex
