@@ -4,6 +4,8 @@ import {
   TouchableOpacity,
   Text,
   AppRegistry,
+  View,
+  StyleSheet,
 } from 'react-native'
 
 import App from './App';
@@ -11,14 +13,7 @@ import App from './App';
 class Instructions extends Component {
 
   static navigationOptions = {
-    title: 'Bienvenido',
-    headerStyle: {
-      backgroundColor: '#ee7600'
-    },
-    headerTitleStyle: {
-      color: '#000',
-      fontSize: 20
-    }
+    header: null
   }
 
   render () {
@@ -27,17 +22,30 @@ class Instructions extends Component {
 
     return (
 
-      <TouchableOpacity
-        onPress={() => this.props.navigation.navigate('App')}>
-        <Text>Empezar</Text>
-      </TouchableOpacity>
+        <View style={{backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center', height: '100%'}}>
+
+          <Text style={{color: '#000'}}> Elije el color de la ruta y crea tu camino </Text>
+          <Text></Text><Text></Text><Text></Text><Text></Text>
+          <TouchableOpacity
+            style={styles.start}
+            onPress={() => this.props.navigation.navigate('App')}>
+            <Text style={{color: '#000', alignItems: 'center'}}> Empezar </Text>
+          </TouchableOpacity>
+
+        </View>
     )
   }
 }
 
 export default Instructions
 
-
+const styles = StyleSheet.create({
+  start:{
+    borderWidth: 1,
+    borderColor: '#000',
+    borderRadius: 10,
+  }
+});
 
 export const WelcomeScreen = StackNavigator({
   App: { screen: App },

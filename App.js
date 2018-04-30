@@ -24,6 +24,7 @@ import ScrollView, { ScrollViewChild } from 'react-native-directed-scrollview';
 import Drawer from 'react-native-drawer'
 import { Header } from 'react-navigation';
 
+
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
@@ -261,13 +262,13 @@ export default class App extends Component {
           closedDrawerOffset={-3}
           tweenDuration={500}
           content={
-            <View style={{alignSelf: 'flex-end'}}>
+            <View style={{alignSelf: 'flex-end', backgroundColor: '#000'}}>
               <View>
-              <Button title="Connect" onPress={this.connect}></Button>
+              <Button title="Connect" color={'#86b300'} onPress={this.connect}></Button>
 
-              <Button title="Send" onPress={this.send}></Button>
+              <Button title="Send" color={'#86b300'} onPress={this.send}></Button>
 
-              <Button title="Diconnect" onPress={this.disconnect}></Button>
+              <Button title="Diconnect" color={'#86b300'} onPress={this.disconnect}></Button>
               </View>
                 <ColorWheel
                  initialColor = {Color}
@@ -277,12 +278,14 @@ export default class App extends Component {
 
 
 
-               <View style={{flexDirection: 'row'}}>
-               <Text>Live Edit</Text>
+               <View style={{flexDirection: 'row', justifyContent: 'center'}}>
+               <Text style={{color: '#eee'}}>Live Edit</Text>
                <View>
                 <Switch
                   onValueChange={ (value) => this.setState({ liveEdit: value })}
                   value={ this.state.liveEdit }
+                  style={{justifyContent: 'flex-end'}}
+                  tintColor={'#eee'}
                   />
                 </View>
                </View>
