@@ -1,5 +1,9 @@
 [
     {
+        "merged": "E:\\Downloads\\ble_test\\android\\app\\build\\intermediates\\res\\merged\\debug\\mipmap-xxhdpi-v4\\ic_launcher.png",
+        "source": "E:\\Downloads\\ble_test\\android\\app\\src\\main\\res\\mipmap-xxhdpi\\ic_launcher.png"
+    },
+    {
         "merged": "E:\\Documents\\Campo 4\\campo4_ble\\android\\app\\build\\intermediates\\res\\merged\\debug\\mipmap-xxhdpi-v4\\ic_launcher.png",
         "source": "E:\\Documents\\Campo 4\\campo4_ble\\android\\app\\src\\main\\res\\mipmap-xxhdpi\\ic_launcher.png"
     },

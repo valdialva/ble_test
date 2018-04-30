@@ -10,5 +10,9 @@
     {
         "merged": "E:\\Documents\\Campo 4\\ble_test\\android\\app\\build\\intermediates\\res\\merged\\debug\\xml\\preferences.xml",
         "source": "C:\\Users\\User\\.gradle\\caches\\transforms-1\\files-1.1\\react-native-0.55.3.aar\\feb7a0448865ff98cc8eace870ab3a9d\\res\\xml\\preferences.xml"
+    },
+    {
+        "merged": "E:\\Downloads\\ble_test\\android\\app\\build\\intermediates\\res\\merged\\debug\\xml\\preferences.xml",
+        "source": "C:\\Users\\User\\.gradle\\caches\\transforms-1\\files-1.1\\react-native-0.55.3.aar\\7afdcb4f226f8d8092ed5723d58558af\\res\\xml\\preferences.xml"
     }
 ]

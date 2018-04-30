@@ -24,9 +24,6 @@ import ScrollView, { ScrollViewChild } from 'react-native-directed-scrollview';
 import Drawer from 'react-native-drawer'
 import { Header } from 'react-navigation';
 
-const SideMenu = require('react-native-side-menu');
-
-
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
