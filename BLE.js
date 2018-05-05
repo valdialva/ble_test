@@ -12,138 +12,138 @@ import {
 import BleManager from 'react-native-ble-manager';
 import { stringToBytes } from 'convert-string';
 
+
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
+
+
 //Propiedades del MoonBoard
-var peripheral = 'B8:27:EB:02:13:F1';
-var service = "12345678-1234-5678-1234-56789abc0010";
-var characteristic = "12345678-1234-5678-1234-56789abc0000";
+//const peripheral = 'B8:27:EB:02:13:F1';
+const service = "12345678-1234-5678-1234-56789abc0010";
+const characteristic = "12345678-1234-5678-1234-56789abc0000";
 
-componentDidMount() {
-  AppState.addEventListener('change', this.handleAppStateChange);
 
-  BleManager.start({showAlert: false});
+export default class BLE{
 
-  this.handlerDiscover = bleManagerEmitter.addListener('BleManagerDiscoverPeripheral', this.handleDiscoverPeripheral );
-  this.handlerStop = bleManagerEmitter.addListener('BleManagerStopScan', this.handleStopScan );
+  static peripheral = '';
+  static scanning = false;
+  constructor(){
+  }
 
-  if (Platform.OS === 'android' && Platform.Version >= 23) {
-      PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION).then((result) => {
-          if (result) {
-            console.log("Permission is OK");
-          } else {
-            PermissionsAndroid.requestPermission(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION).then((result) => {
-              if (result) {
-                console.log("User accept");
-              } else {
-                console.log("User refuse");
-              }
-            });
-          }
+  //Initialize BLE components
+  componentDidMount() {
+
+    BleManager.start({showAlert: false});
+
+    this.handlerDiscover = bleManagerEmitter.addListener('BleManagerDiscoverPeripheral', this.handleDiscoverPeripheral );
+    this.handlerStop = bleManagerEmitter.addListener('BleManagerStopScan', this.handleStopScan );
+
+    if (Platform.OS === 'android' && Platform.Version >= 23) {
+        PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION).then((result) => {
+            if (result) {
+              console.log("Permission is OK");
+            } else {
+              PermissionsAndroid.requestPermission(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION).then((result) => {
+                if (result) {
+                  console.log("User accept");
+                } else {
+                  console.log("User refuse");
+                }
+              });
+            }
+      });
+    }
+  }
+
+  componentWillUnmount = () => {
+    this.handlerDiscover.remove();
+    this.handlerStop.remove();
+    this.handlerDisconnect.remove();
+    this.handlerUpdate.remove();
+  }
+
+  //When device is discovered check name, if it is MoonBoard, connect
+  handleDiscoverPeripheral = (peripheral) =>{
+    if (peripheral.name == "MoonBoard"){
+      this.peripheral = peripheral.id;
+      //console.warn(peripheral.name.toString());
+      //console.warn(peripheral.id);
+      this.connect();
+    }
+  }
+
+  //Scan for 10 secconds
+  startScan = () => {
+    if (!this.scanning) {
+      BleManager.scan([service], 10, true).then((results) => {
+        console.warn(results);
+        console.log('Scanning...');
+        this.scanning = true;
+      });
+    }
+  }
+
+  //Set scanning to false
+  handleStopScan = () => {
+    console.log('Scan is stopped');
+    this.scanning = false;
+  }
+
+  connect = () => {
+    console.warn(this.peripheral);
+    BleManager.connect(this.peripheral)
+    .then(() => {
+      // Success code
+      console.warn('Connected');
+    })
+    .catch((error) => {
+      // Failure code
+      console.warn(error);
+      console.warn(this.peripheral);
     });
   }
-}
 
-handleAppStateChange = (nextAppState) => {
-  if (this.state.appState.match(/inactive|background/) && nextAppState === 'active') {
-    console.log('App has come to the foreground!')
-    BleManager.getConnectedPeripherals([]).then((peripheralsArray) => {
-      console.log('Connected peripherals: ' + peripheralsArray.length);
+  disconnect = () =>{
+    BleManager.disconnect(this.peripheral)
+        .then(() => {
+     // Success code
+     console.log('Disconnected');
+   })
+   .catch((error) => {
+     // Failure code
+     console.log(error);
+   });
+  }
+
+  send = (data) =>{
+
+    setTimeout(() => {
+      BleManager.retrieveServices(this.peripheral).then((peripheralInfo) => {
+        console.warn(peripheralInfo);
+        setTimeout(() => {
+          BleManager.write(this.peripheral, service, characteristic, stringToBytes(`${data}fin`)).then(() => {
+            console.warn('Sent');
+          }).catch(error => {
+            console.warn(error);
+          });
+
+        }, 500);
+      });
+
+    }, 900);
+  }
+
+  //Check if device is connected
+  isConnected = () =>{
+    BleManager.isPeripheralConnected(this.peripheral, [])
+    .then((isConnected) => {
+      if (isConnected) {
+        return true;
+      } else {
+        return false;
+      }
     });
   }
-  this.setState({appState: nextAppState});
-}
 
-componentWillUnmount = () => {
-  this.handlerDiscover.remove();
-  this.handlerStop.remove();
-  this.handlerDisconnect.remove();
-  this.handlerUpdate.remove();
-}
-
-handleDiscoverPeripheral = (peripheral) =>{
-  if (peripheral.name == "MoonBoard"){
-    this.peripheral = peripheral.id;
-    console.warn(peripheral.name.toString());
-    connect();
-  }
-}
-
-startScan = () => {
-  if (!scanning) {
-    BleManager.scan([], 10, true).then((results) => {
-      console.warn(results);
-      console.log('Scanning...');
-      scanning = true;
-    });
-  }
-}
-
-handleStopScan = () => {
-  console.log('Scan is stopped');
-  scanning = false;
-}
-
-connect = () => {
-  BleManager.connect(peripheral)
-  .then(() => {
-    // Success code
-    console.warn('Connected');
-  })
-  .catch((error) => {
-    // Failure code
-    console.warn(error);
-    console.warn(peripheral);
-  });
-}
-
-disconnect = () =>{
-  BleManager.disconnect(peripheral)
-      .then(() => {
-   // Success code
-   console.log('Disconnected');
- })
- .catch((error) => {
-   // Failure code
-   console.log(error);
- });
-}
-
-send = () =>{
-  var temp = "";
-  for (var i = 0; i < buttons.length; i++) {
-    temp+=buttons[i].state;
-  }
-  setTimeout(() => {
-    BleManager.retrieveServices(peripheral).then((peripheralInfo) => {
-      console.warn(peripheralInfo);
-      setTimeout(() => {
-        BleManager.write(peripheral, service, characteristic, stringToBytes(`${temp},${Color}fin`)).then(() => {
-          console.warn('Sent');
-        }).catch(error => {
-          console.warn(error);
-        });
-
-      }, 500);
-    });
-
-  }, 900);
-}
-
-sendData = (id, color) =>{
-  setTimeout(() => {
-    BleManager.retrieveServices(peripheral).then((peripheralInfo) => {
-      console.warn(peripheralInfo);
-      setTimeout(() => {
-        BleManager.write(peripheral, service, characteristic, stringToBytes(`${id},${color}fin`)).then(() => {
-          console.warn('Sent');
-        }).catch(error => {
-          console.warn(error);
-        });
-
-      }, 500);
-    });
-
-  }, 900);
 }

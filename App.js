@@ -11,44 +11,38 @@ import {
   NativeModules,
   Platform,
   PermissionsAndroid,
-  AppState,
   Button,
   Switch
 } from 'react-native';
 import {Icon} from 'react-native-elements';
-import BleManager from 'react-native-ble-manager';
-import { stringToBytes } from 'convert-string';
 import colorsys from 'colorsys'
 import { ColorWheel } from 'react-native-color-wheel';
 import ScrollView, { ScrollViewChild } from 'react-native-directed-scrollview';
 import Drawer from 'react-native-drawer'
 import { Header } from 'react-navigation';
+import BLE from './BLE';
 
 
-const BleManagerModule = NativeModules.BleManager;
-const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
+const BleManager = new BLE();
 
 var { height, width } = Dimensions.get('window');
 
 var Color = "#eeeeee";
 var color2send = Color;
 
-//Propiedades del MoonBoard
-var peripheral = 'B8:27:EB:02:13:F1';
-var service = "12345678-1234-5678-1234-56789abc0010";
-var characteristic = "12345678-1234-5678-1234-56789abc0000";
-
 const buttons = []
-const colors = []
+//const colors = []
+const led_state = []
 
-for(var i = 0 ; i < 400; i++){
+for(var i = 0 ; i < 20; i++){
   buttons.push(
     {
        id: i,
        state: 0,
      }
   );
-  colors.push("gray")
+  //colors.push("gray");
+  led_state.push(0);
 }
 
 
@@ -57,12 +51,13 @@ export default class App extends Component {
     constructor(){
       super()
 
+      this._onPress = this._onPress.bind(this);
+
       this.state = {
-        appState: '',
-        Led: Color,
-        colors: colors,
+        //colors: [],
         drawer: true,
-        liveEdit: false
+        liveEdit: false,
+        led_state: led_state
       }
     }
 
@@ -90,7 +85,7 @@ export default class App extends Component {
     };
 
 
-    componentWillMount(){
+  componentWillMount(){
       this.props.navigation.setParams({
         controlMenu: this.controlPanel,
         drawer: this.state.drawer,
@@ -99,143 +94,64 @@ export default class App extends Component {
     }
 
   componentDidMount() {
-    AppState.addEventListener('change', this.handleAppStateChange);
 
-    BleManager.start({showAlert: false});
-
-    this.handlerUpdate = bleManagerEmitter.addListener('BleManagerDidUpdateValueForCharacteristic', this.handleUpdateValueForCharacteristic );
+    BleManager.componentDidMount();
 
     this._drawer.open()
 
-    if (Platform.OS === 'android' && Platform.Version >= 23) {
-        PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION).then((result) => {
-            if (result) {
-              console.log("Permission is OK");
-            } else {
-              PermissionsAndroid.requestPermission(PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION).then((result) => {
-                if (result) {
-                  console.log("User accept");
-                } else {
-                  console.log("User refuse");
-                }
-              });
-            }
-      });
-    }
-  }
-
-  handleAppStateChange = (nextAppState) => {
-    if (this.state.appState.match(/inactive|background/) && nextAppState === 'active') {
-      console.log('App has come to the foreground!')
-      BleManager.getConnectedPeripherals([]).then((peripheralsArray) => {
-        console.log('Connected peripherals: ' + peripheralsArray.length);
-      });
-    }
-    this.setState({appState: nextAppState});
   }
 
   componentWillUnmount = () => {
-    this.handlerDiscover.remove();
-    this.handlerStop.remove();
-    this.handlerDisconnect.remove();
-    this.handlerUpdate.remove();
-  }
-
-  handleUpdateValueForCharacteristic = (data) => {
-    console.log('Received data from ' + data.peripheral + ' characteristic ' + data.characteristic, data.value);
+    BleManager.componentWillUnmount();
   }
 
   connect = () => {
-    BleManager.connect(peripheral)
-    .then(() => {
-      // Success code
-      console.warn('Connected');
-    })
-    .catch((error) => {
-      // Failure code
-      console.warn(error);
-      console.warn(peripheral);
-    });
+    BleManager.startScan();
   }
 
   disconnect = () =>{
-    BleManager.disconnect(peripheral)
-        .then(() => {
-     // Success code
-     console.log('Disconnected');
-   })
-   .catch((error) => {
-     // Failure code
-     console.log(error);
-   });
+    BleManager.disconnect();
   }
 
   send = () =>{
     var temp = "";
     for (var i = 0; i < buttons.length; i++) {
-      temp+=buttons[i].state;
+      if(buttons[i].state == 1)
+        temp+=i+',';
     }
-    setTimeout(() => {
-      BleManager.retrieveServices(peripheral).then((peripheralInfo) => {
-        console.warn(peripheralInfo);
-        setTimeout(() => {
-          BleManager.write(peripheral, service, characteristic, stringToBytes(`${temp},${Color}fin`)).then(() => {
-            console.warn('Sent');
-          }).catch(error => {
-            console.warn(error);
-          });
-
-        }, 500);
-      });
-
-    }, 900);
-  }
-
-  sendData = (id, color) =>{
-    setTimeout(() => {
-      BleManager.retrieveServices(peripheral).then((peripheralInfo) => {
-        console.warn(peripheralInfo);
-        setTimeout(() => {
-          BleManager.write(peripheral, service, characteristic, stringToBytes(`${id},${color}fin`)).then(() => {
-            console.warn('Sent');
-          }).catch(error => {
-            console.warn(error);
-          });
-
-        }, 500);
-      });
-
-    }, 900);
-  }
-
-  handleDiscoverPeripheral = (peripheral) =>{
-    var peripherals = this.state.peripherals;
-    if (!peripherals.has(peripheral.id)){
-      console.log('Got ble peripheral', peripheral);
-      console.warn(peripheral.id.toString());
-      peripherals.set(peripheral.id, peripheral);
-      this.setState({ peripherals })
-    }
+    temp = temp.slice(0,-1)+';'+Color;
+    BleManager.send(temp);
   }
 
   _onPress = (id) => {
     var color2send = Color;
     if (buttons[id].state == 0) {
       buttons[id].state = 1;
-      this.state.colors[id] =  Color;
+      this.state.led_state[id] = 1;
+      //this.state.colors[id] =  Color;
     }else{
+
+      /*
       if(Color == this.state.colors[id]){
         buttons[id].state = 0;
-        this.state.colors[id] =  "gray";
+        this.state.led_state[id] = 0;
+        //this.state.colors[id] =  "#000000";
         color2send = "#000000";
       }else{
-        this.state.colors[id] =  Color;
+        //this.state.colors[id] =  Color;
       }
-    }
-    this.setState({colors});
+      */
+      color2send = "#000000";
 
-    if(this.state.liveEdit)
-      this.sendData(id, color2send);
+      buttons[id].state = 0;
+      this.state.led_state[id] = 0;
+    }
+
+    this.setState({led_state});
+    if(this.state.liveEdit){
+      //this.setState({colors});
+      BleManager.send(id+';'+color2send);
+    }
   }
 
   controlPanel = () => {
@@ -261,6 +177,7 @@ export default class App extends Component {
           panCloseMask={0.5}
           closedDrawerOffset={-3}
           tweenDuration={500}
+          type="overlay"
           content={
             <View style={{alignSelf: 'flex-end', backgroundColor: '#000'}}>
               <View>
@@ -304,7 +221,7 @@ export default class App extends Component {
               <View style={[styles.bottom]}>
                 {buttons.map((btnInfo) => {
                    return (
-                     <TouchableOpacity style={[styles.button, {backgroundColor: this.state.colors[btnInfo.id], height: (height-80)/20, width: (height-Header.HEIGHT)/20}]} key={btnInfo.id} onPress={()=>{this._onPress(btnInfo.id)}}><Text></Text></TouchableOpacity>
+                     <TouchableOpacity style={[styles.button, {backgroundColor: this.state.led_state[btnInfo.id] === 1 ? Color: "gray", height: (height-80)/20, width: (height-Header.HEIGHT)/20}]} key={btnInfo.id} onPress={()=>{this._onPress(btnInfo.id)}}><Text></Text></TouchableOpacity>
                    );
                 })}
               </View>
